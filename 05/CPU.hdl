@@ -40,4 +40,52 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+    // 1. 判斷指令類型（A指令 或 C指令）
+    Not(in=instruction[15], out=isAInstruction);
+
+    // 2. A 暫存器（A Register）
+    // 如果是 A 指令，輸入為 instruction；如果是 C 指令且目的地位包含 A（d1 = instruction[5]），輸入為 ALU 的輸出。
+    Or(a=isAInstruction, b=instruction[5], out=loadA);
+    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=aRegIn);
+    ARegister(in=aRegIn, load=loadA, out=aRegOut, out[0..14]=addressM);
+
+    // 3. ALU 的 Y 輸入選擇（A 暫存器 或 外部記憶體 M）
+    // 根據 a 位元（instruction[12]）決定是用 A 還是 M
+    Mux16(a=aRegOut, b=inM, sel=instruction[12], out=aluY);
+
+    // 4. D 暫存器（D Register）
+    // 只有在 C 指令且目的地位包含 D（d2 = instruction[4]）時才寫入
+    And(a=instruction[15], b=instruction[4], out=loadD);
+    DRegister(in=aluOut, load=loadD, out=dRegOut);
+
+    // 5. 算術邏輯單元（ALU）
+    // X 輸入永遠是 D 暫存器，Y 輸入由上面決定，運算控制位元來自 instruction[6..11]
+    ALU(x=dRegOut, y=aluY, 
+        zx=instruction[11], nx=instruction[10], 
+        zy=instruction[9], ny=instruction[8], 
+        f=instruction[7], no=instruction[6], 
+        out=aluOut, out=outM, zr=zr, ng=ng);
+
+    // 6. 寫入記憶體控制信號（WriteM）
+    // 只有在 C 指令且目的地位包含 M（d3 = instruction[3]）時為 1
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    // 7. 程式計數器（PC）與跳轉邏輯
+    // 計算大於 0 的狀況 (positive)
+    Not(in=zr, out=notZr);
+    Not(in=ng, out=notNg);
+    And(a=notZr, b=notNg, out=pos);
+
+    // 檢查跳轉條件（j1: out<0, j2: out==0, j3: out>0）
+    And(a=instruction[2], b=ng, out=j1);
+    And(a=instruction[1], b=zr, out=j2);
+    And(a=instruction[0], b=pos, out=j3);
+
+    Or(a=j1, b=j2, out=j1Or2);
+    Or(a=j1Or2, b=j3, out=jumpCondition);
+
+    // 只有在 C 指令且符合跳轉條件時，PC 才會載入 A 暫存器的地址
+    And(a=instruction[15], b=jumpCondition, out=jump);
+
+    PC(in=aRegOut, load=jump, inc=true, reset=reset, out[0..14]=pc);
 }
