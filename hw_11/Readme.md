@@ -1,7 +1,7 @@
-Nand2Tetris VM Translator (Chapters 7 & 8)
+#Nand2Tetris VM Translator (Chapters 7 & 8)
 本專案實作 Nand2Tetris（《計算機系統要素》第 2 版）第 7 章與第 8 章的虛擬機轉譯器（VM Translator），將堆疊導向的虛擬機指令（.vm）轉譯為 Hack 平台組合語言（.asm）。
 
-專案架構
+#專案架構
 Parser：讀取單一 .vm 檔案，移除 // 註解與多餘空白，拆解指令類型（C_ARITHMETIC、C_PUSH、C_POP、C_LABEL、C_GOTO、C_IF、C_FUNCTION、C_RETURN、C_CALL）與參數。
 
 CodeWriter：依 Hack 標準記憶體映射產生組合語言，管理目前函式名稱、唯一標籤計數器、啟動碼（Bootstrap code）與呼叫堆疊框架。
