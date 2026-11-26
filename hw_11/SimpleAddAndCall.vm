@@ -1,0 +1,19 @@
+// 測試第 7 章記憶體區段、算術運算與第 8 章函式呼叫
+function Main.main 2
+push constant 10
+pop local 0          // local[0] = 10
+push constant 25
+pop local 1          // local[1] = 25
+push local 0
+push local 1
+call Main.addTwo 2   // 呼叫 addTwo(10, 25)
+push constant 5
+sub                  // 35 - 5 = 30
+return
+
+// 計算兩個參數相加的函式
+function Main.addTwo 0
+push argument 0
+push argument 1
+add
+return
